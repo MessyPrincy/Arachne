@@ -18,15 +18,17 @@ def health_check():
 def scrape_endpoint(request: ScrapeRequest):
     try:
         # Currently hardcoded to the bookstore logic from scraper.py
-        books = scraper.scrape(request.url, request.max_pages)
-        filename = f"./data/books_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{request.export_format}"
+        data = scraper.scrape(request.url, request.max_pages)
+        filename = f"./data/scraped_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{request.export_format}"
 
         match request.export_format:
             # If there is no export format, which is default, assume you export the data through the api and not save it on file
             case None:
-                return ScrapeResponse(status="success", data=books)
+                return ScrapeResponse(status="success", data=data)
             case "json":
-                exporters.export_to_json(books, filename)
+                exporters.export_to_json(data, filename)
+            case "csv":
+                exporters.export_to_csv(data, filename)
             case _:
                 raise RuntimeError(f"Unsupported export format: {request.export_format}")
 
