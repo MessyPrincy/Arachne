@@ -2,8 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-url = "https://books.toscrape.com/"
-
 def fetch_page(url):
     response = requests.get(url)
 
@@ -43,4 +41,3 @@ def scrape(url, max_pages):
     return books
 
 
-print(scrape(url, 3))
