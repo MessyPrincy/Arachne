@@ -35,7 +35,7 @@ def scrape(url, max_pages):
     books = []
     for i in range(max_pages):
         html = fetch_page(url)
-        books.append(parse_books(html, url))
+        books.extend(parse_books(html, url))
         url = get_next_page_url(html, url)
 
     return books
