@@ -5,7 +5,8 @@ class ScrapeRequest(BaseModel):
     url: str
     use_ai: bool = False
     max_pages: Optional[int] = 1
+    export_format: Optional[str] = None # Can be db, json & csv
 
 class ScrapeResponse(BaseModel):
     status: str
-    data: List[Dict[str, Any]]
+    data: Optional[List[Dict[str, Any]]] = None
