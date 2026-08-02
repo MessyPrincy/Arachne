@@ -9,4 +9,4 @@ class ScrapeRequest(BaseModel):
 
 class ScrapeResponse(BaseModel):
     status: str
-    data: Optional[List[Dict[str, Any]]] = None 
+    data: Optional[List[Dict[str, Any]]] = None
