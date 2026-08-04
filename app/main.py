@@ -1,14 +1,19 @@
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from app.models import ScrapeRequest, ScrapeResponse
 from app import scraper
 from app import exporters
 
 app = FastAPI(title="Arachne Scraper API")
+templates = Jinja2Templates(directory="templates")
 
 @app.get("/")
-def read_root():
-    return {"message": "Welcome to the Arachne Scraper API"}
+def home(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="index.html"
+    )
 
 @app.get("/health")
 def health_check():
