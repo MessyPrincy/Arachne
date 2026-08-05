@@ -1,6 +1,6 @@
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.models import ScrapeRequest, ScrapeResponse
 from app import scraper
@@ -8,6 +8,8 @@ from app import exporters
 
 app = FastAPI(title="Arachne Scraper API")
 templates = Jinja2Templates(directory="templates")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def home(request: Request):
