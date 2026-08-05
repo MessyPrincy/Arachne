@@ -27,26 +27,21 @@ def scrape_endpoint(request: ScrapeRequest):
         # Currently hardcoded to the bookstore logic from scraper.py
         data = scraper.scrape(request.url, request.max_pages)
         export = request.export_format
+        filename = f"./data/scraped_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{request.export_format}"
 
         # No export_format, means we return the data through API
         if not export:
             return ScrapeResponse(status="success", data=data)
-
-        if export == "db":
+        elif export == "db":
             exporters.export_to_db(data, database, request.url)
-            return ScrapeResponse(status="success")
-
-        filename = f"./data/scraped_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{request.export_format}"
-
-        if export == "json":
+        elif export == "json":
             exporters.export_to_json(data, filename)
-            return ScrapeResponse(status="success")
         elif export == "csv":
             exporters.export_to_csv(data, filename)
-            return ScrapeResponse(status="success")
         # This is important, never trust user input    
         else:
-            return RuntimeError(f"Unsupported export format: {request.export_format}")
+            raise ValueError(f"Unsupported export format: {request.export_format}")
+        return ScrapeResponse(status="success")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

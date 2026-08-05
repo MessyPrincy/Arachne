@@ -42,10 +42,11 @@ Scrape a target website. (Currently hardcoded for `books.toscrape.com`).
 - `url` (string, required)
 - `max_pages` (int, optional, default: 1)
 - `use_ai` (bool, optional, default: false)
+- `export_format` (string (json, csv, db), optional, default: None)
 
 *Example:*
 ```bash
 curl -X POST http://localhost:8000/api/scrape \
   -H "Content-Type: application/json" \
-  -d '{"url": "http://books.toscrape.com/", "max_pages": 1}'
+  -d '{"url": "http://books.toscrape.com/", "max_pages": 1, "export_format": "db"}'
 ```
