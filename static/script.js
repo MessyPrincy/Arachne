@@ -9,6 +9,7 @@ fetch('/api/scrape-entries')
                     label: "Entries per scrapes",
                     data: data.values,
                     borderWidth: 1
+                    // Change the color of the text
                 }]
             },
             options: {
