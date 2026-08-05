@@ -13,6 +13,29 @@ def get_entries_per_scrapes(filepath):
         cursor.execute(
             "SELECT scrape_id, COUNT(*) FROM entries GROUP BY scrape_id"
         )
+
+        return cursor.fetchall()
+
+    except sqlite3.Error as error:
+        print('Error occurred -', error)
+    
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+
+def get_urls_per_scrapes(filepath):
+    path = Path(filepath)
+    print("API is connecting to:", path.resolve())
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        sqliteConnection = sqlite3.connect(path)
+
+        cursor = sqliteConnection.cursor()
+
+        cursor.execute(
+            "SELECT source_url, COUNT(*) FROM scrapes GROUP BY source_url"
+        )
         
         return cursor.fetchall()
 
@@ -22,4 +45,3 @@ def get_entries_per_scrapes(filepath):
     finally:
         if sqliteConnection:
             sqliteConnection.close()
-    

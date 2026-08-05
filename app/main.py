@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.models import ScrapeRequest, ScrapeResponse
-from app import scraper, exporters, retrievers
+from app import scraper, exporters, retrievers, helpers
 
 app = FastAPI(title="Arachne Scraper API")
 templates = Jinja2Templates(directory="templates")
@@ -52,12 +52,8 @@ def scrape_endpoint(request: ScrapeRequest):
 
 @app.get("/api/scrape-entries")
 def get_scrape_entries():
-    rows = retrievers.get_entries_per_scrapes(database)
-    labels = []
-    values = []
-    for row in rows:
-        labels.append(row[0])
-        values.append(row[1])
+    return helpers.get_chart_dict(retrievers.get_entries_per_scrapes(database))
 
-    return {"labels": labels, "values": values}
-
+@app.get("/api/scrape-urls")
+def get_scrape_urls():
+    return helpers.get_chart_dict(retrievers.get_urls_per_scrapes(database))
