@@ -3,11 +3,11 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.models import ScrapeRequest, ScrapeResponse
-from app import scraper
-from app import exporters
+from app import scraper, exporters, retrievers
 
 app = FastAPI(title="Arachne Scraper API")
 templates = Jinja2Templates(directory="templates")
+database = "./data/scraped_data.db"
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -33,8 +33,7 @@ def scrape_endpoint(request: ScrapeRequest):
             return ScrapeResponse(status="success", data=data)
 
         if export == "db":
-            filename = f"./data/scraped_data.db"
-            exporters.export_to_db(data, filename, request.url)
+            exporters.export_to_db(data, database, request.url)
             return ScrapeResponse(status="success")
 
         filename = f"./data/scraped_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{request.export_format}"
@@ -50,3 +49,15 @@ def scrape_endpoint(request: ScrapeRequest):
             return RuntimeError(f"Unsupported export format: {request.export_format}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/scrape-entries")
+def get_scrape_entries():
+    rows = retrievers.get_entries_per_scrapes(database)
+    labels = []
+    values = []
+    for row in rows:
+        labels.append(row[0])
+        values.append(row[1])
+
+    return {"labels": labels, "values": values}
+

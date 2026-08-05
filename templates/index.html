@@ -5,5 +5,13 @@
 {% endblock %}
 
 {% block main %}
-    <!-- html code here -->
+    <div>
+        <canvas id="scarpeChart"></canvas>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="{{ url_for('static', path='script.js') }}"></script>
 {% endblock %}
