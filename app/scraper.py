@@ -1,43 +1,45 @@
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+import os
+import importlib
+import inspect
+from typing import Dict, Type
+from app.base_scraper import BaseScraper
 
-def fetch_page(url):
-    response = requests.get(url)
+# Dictionary to hold the loaded scraper classes
+_SCRAPER_REGISTRY: Dict[str, Type[BaseScraper]] = {}
 
-    response.raise_for_status()
+def load_modules():
+    """Dynamically loads all scraper modules from the app/modules directory."""
+    global _SCRAPER_REGISTRY
+    _SCRAPER_REGISTRY.clear()
+    
+    modules_dir = os.path.join(os.path.dirname(__file__), "modules")
+    
+    for filename in os.listdir(modules_dir):
+        if filename.endswith(".py") and not filename.startswith("__"):
+            module_name = filename[:-3]
+            try:
+                # Import the module
+                module = importlib.import_module(f"app.modules.{module_name}")
+                
+                # Find classes in the module that inherit from BaseScraper
+                for name, obj in inspect.getmembers(module, inspect.isclass):
+                    if issubclass(obj, BaseScraper) and obj is not BaseScraper:
+                        scraper_name = obj.get_name()
+                        _SCRAPER_REGISTRY[scraper_name] = obj
+                        print(f"Loaded scraper module: {scraper_name}")
+            except Exception as e:
+                print(f"Error loading module {module_name}: {e}")
 
-    return response.text
+# Load modules on startup
+load_modules()
 
-def parse_books(html, url):
-    soup = BeautifulSoup(html, "html.parser")
+def get_available_modules() -> list[str]:
+    """Returns a list of available scraper module names."""
+    return list(_SCRAPER_REGISTRY.keys())
 
-    books = soup.find_all("article", class_="product_pod")
-
-    book_list = []
-
-    for book in books:
-        title = book.select_one("h3 a")["title"]
-        price = book.find("p", class_="price_color").get_text(strip=True)
-        link = urljoin(url, book.select_one("h3 a")["href"])
-        book_list.append({"title": title, "price": price, "link" : link})
-
-    return book_list
-
-def get_next_page_url(html, current_url):
-    soup = BeautifulSoup(html, "html.parser")
-
-    next_html = soup.find("li", class_="next").select_one("a")["href"]
-
-    return urljoin(current_url, next_html)
-
-def scrape(url, max_pages):
-    books = []
-    for i in range(max_pages):
-        html = fetch_page(url)
-        books.extend(parse_books(html, url))
-        url = get_next_page_url(html, url)
-
-    return books
-
-
+def get_scraper(module_name: str) -> BaseScraper:
+    """Returns an instance of the requested scraper module."""
+    scraper_class = _SCRAPER_REGISTRY.get(module_name)
+    if not scraper_class:
+        raise ValueError(f"Scraper module '{module_name}' not found.")
+    return scraper_class()

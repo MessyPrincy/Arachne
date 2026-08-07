@@ -6,6 +6,10 @@ class ScrapeRequest(BaseModel):
     use_ai: bool = False
     max_pages: Optional[int] = 1
     export_format: Optional[str] = None # Can be db, json & csv
+    module_name: Optional[str] = None
+    use_proxies: bool = False
+    test_proxies_first: bool = False
+    rotate_proxies: bool = False
 
 class ScrapeResponse(BaseModel):
     status: str
