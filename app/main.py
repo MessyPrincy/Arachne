@@ -1,5 +1,6 @@
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Form
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.models import ScrapeRequest, ScrapeResponse
@@ -17,33 +18,26 @@ def home(request: Request):
         request=request, name="index.html"
     )
 
+@app.get("/scrape")
+def scrape_page(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="scrape.html"
+    )
+
+@app.post("/scrape")
+def scrape_submit(url: str = Form(...), max_pages: int = Form(1), export: str = Form("db")):
+    perform_scrape(url, max_pages, export or None)
+    return RedirectResponse(url="/", status_code=303)
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
 @app.post("/api/scrape", response_model=ScrapeResponse)
 def scrape_endpoint(request: ScrapeRequest):
-    try:
-        # Currently hardcoded to the bookstore logic from scraper.py
-        data = scraper.scrape(request.url, request.max_pages)
-        export = request.export_format
-        filename = f"./data/scraped_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{request.export_format}"
+    data = perform_scrape(request.url, request.max_pages, request.export_format)
+    return ScrapeResponse(status="success", data=data if not request.export_format else None)
 
-        # No export_format, means we return the data through API
-        if not export:
-            return ScrapeResponse(status="success", data=data)
-        elif export == "db":
-            exporters.export_to_db(data, database, request.url)
-        elif export == "json":
-            exporters.export_to_json(data, filename)
-        elif export == "csv":
-            exporters.export_to_csv(data, filename)
-        # This is important, never trust user input    
-        else:
-            raise ValueError(f"Unsupported export format: {request.export_format}")
-        return ScrapeResponse(status="success")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/scrape-entries")
 def get_scrape_entries():
@@ -52,3 +46,19 @@ def get_scrape_entries():
 @app.get("/api/scrape-urls")
 def get_scrape_urls():
     return helpers.get_chart_dict(retrievers.get_urls_per_scrapes(database))
+
+def perform_scrape(url: str, max_pages: int, export_format: str | None = None):
+    data = scraper.scrape(url, max_pages)
+
+    if export_format == "db":
+        exporters.export_to_db(data, database, url)
+    elif export_format in ("json", "csv"):
+        filename = f"./data/scraped_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{export_format}"
+        if export_format == "json":
+            exporters.export_to_json(data, filename)
+        else:
+            exporters.export_to_csv(data, filename)
+    elif export_format not in (None, ""):
+        raise ValueError(f"Unsupported export format: {export_format}")
+
+    return data

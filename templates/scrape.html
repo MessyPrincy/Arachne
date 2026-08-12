@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block main %}
+    <section>
+        <form action="/scrape" method="post">
+            <div class="rounded-4 bg-dark border p-3">
+                <input autocomplete="off" autofocus class="form-control mb-2" name="url" placeholder="URL to scrape" type="url" required>
+                <input autocomplete="off" class="form-control mb-2" name="max_pages" placeholder="Number of pages" type="number">
+                <select class="form-select" name="export">
+                    <option value="db" selected>Database</option>
+                    <option value="json">Json</option>
+                    <option value="csv">Csv</option>
+                    <option value="">None</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" type="submit">Scrape</button>
+        </form>
+    </section>
+{% endblock %}
